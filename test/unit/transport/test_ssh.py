@@ -146,7 +146,7 @@ class TestSSH(unittest.TestCase):
         device_handler = JunosDeviceHandler({'name': 'junos'})
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
-        obj._auth('user', 'password', [], True, True)
+        obj._auth('user', 'password', [], True, True, None)
         self.assertEqual(
             (mock_auth_public_key.call_args_list[0][0][1]).__repr__(),
             key.__repr__())
@@ -161,7 +161,7 @@ class TestSSH(unittest.TestCase):
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
         self.assertRaises(AuthenticationError,
-            obj._auth,'user', None, [], True, False)
+            obj._auth,'user', None, [], True, False, None)
 
     @patch('paramiko.transport.Transport.auth_publickey')
     @patch('paramiko.pkey.PKey.from_private_key_file')
@@ -171,7 +171,7 @@ class TestSSH(unittest.TestCase):
         device_handler = JunosDeviceHandler({'name': 'junos'})
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
-        obj._auth('user', 'password', ["key_file_name"], False, True)
+        obj._auth('user', 'password', ["key_file_name"], False, True, None)
         self.assertEqual(
             (mock_auth_public_key.call_args_list[0][0][1]).__repr__(),
             key.__repr__())
@@ -185,7 +185,7 @@ class TestSSH(unittest.TestCase):
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
         self.assertRaises(AuthenticationError,
-            obj._auth,'user', None, ["key_file_name"], False, True)
+            obj._auth,'user', None, ["key_file_name"], False, True, None)
 
     @patch('os.path.isfile')
     @patch('paramiko.transport.Transport.auth_publickey')
@@ -198,7 +198,7 @@ class TestSSH(unittest.TestCase):
         device_handler = JunosDeviceHandler({'name': 'junos'})
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
-        obj._auth('user', 'password', [], False, True)
+        obj._auth('user', 'password', [], False, True, False)
         self.assertEqual(
             (mock_auth_public_key.call_args_list[0][0][1]).__repr__(),
             key.__repr__())
@@ -215,14 +215,14 @@ class TestSSH(unittest.TestCase):
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
         self.assertRaises(AuthenticationError,
-			              obj._auth,'user', None, [], False, True)
+			              obj._auth,'user', None, [], False, True, None)
 
     @patch('paramiko.transport.Transport.auth_password')
     def test_auth_password(self, mock_auth_password):
         device_handler = JunosDeviceHandler({'name': 'junos'})
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
-        obj._auth('user', 'password', [], False, True)
+        obj._auth('user', 'password', [], False, True, None)
         self.assertEqual(
             mock_auth_password.call_args_list[0][0],
             ('user',
@@ -235,14 +235,14 @@ class TestSSH(unittest.TestCase):
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
         self.assertRaises(AuthenticationError,
-            obj._auth, 'user', 'password', [], False, True)
+            obj._auth, 'user', 'password', [], False, True, None)
 
     def test_auth_no_methods_exception(self):
         device_handler = JunosDeviceHandler({'name': 'junos'})
         obj = SSHSession(device_handler)
         obj._transport = paramiko.Transport(MagicMock())
         self.assertRaises(AuthenticationError,
-            obj._auth,'user', None, [], False, False)
+            obj._auth,'user', None, [], False, False, None)
 
     @patch('paramiko.transport.Transport.close')
     def test_close(self, mock_close):
