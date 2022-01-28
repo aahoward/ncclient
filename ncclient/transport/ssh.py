@@ -179,7 +179,9 @@ class SSHSession(Session):
             bind_addr           = None,
             sock                = None,
             keepalive           = None,
-            environment         = None):
+            environment         = None,
+            passphrase          = None,
+    ):
 
         """Connect via SSH and initialize the NETCONF session. First attempts the publickey authentication method and then password authentication.
 
@@ -218,11 +220,16 @@ class SSHSession(Session):
         *keepalive* Turn on/off keepalive packets (default is off). If this is set, after interval seconds without sending any data over the connection, a "keepalive" packet will be sent (and ignored by the remote host). This can be useful to keep connections alive over a NAT.
 
         *environment* a dictionary containing the name and respective values to set
+
+        *passphrase* is the passphrase used to decrpyt the private key , when not provided the password is used instead.
         """
         if not (host or sock_fd or sock):
             raise SSHError("Missing host, socket or socket fd")
 
         self._host = host
+
+        if passphrase is None and password is not None:
+            passphrase=password
 
         # Optionally, parse .ssh/config
         config = {}
@@ -361,7 +368,7 @@ class SSHSession(Session):
         else:
             key_filenames = key_filename
 
-        self._auth(username, password, key_filenames, allow_agent, look_for_keys)
+        self._auth(username, password, key_filenames, allow_agent, look_for_keys, passphrase)
 
         self._connected = True      # there was no error authenticating
         self._closing.clear()
@@ -407,13 +414,13 @@ class SSHSession(Session):
                        " SSH subsystem name.")
 
     def _auth(self, username, password, key_filenames, allow_agent,
-              look_for_keys):
+              look_for_keys, passphrase):
         saved_exception = None
 
         for key_filename in key_filenames:
             for cls in (paramiko.RSAKey, paramiko.DSSKey, paramiko.ECDSAKey, paramiko.Ed25519Key):
                 try:
-                    key = cls.from_private_key_file(key_filename, password)
+                    key = cls.from_private_key_file(key_filename, passphrase)
                     self.logger.debug("Trying key %s from %s",
                                       hexlify(key.get_fingerprint()),
                                       key_filename)
@@ -458,7 +465,7 @@ class SSHSession(Session):
 
         for cls, filename in keyfiles:
             try:
-                key = cls.from_private_key_file(filename, password)
+                key = cls.from_private_key_file(filename, passphrase)
                 self.logger.debug("Trying discovered key %s in %s",
                                   hexlify(key.get_fingerprint()), filename)
                 self._transport.auth_publickey(username, key)
